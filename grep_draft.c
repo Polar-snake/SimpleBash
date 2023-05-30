@@ -18,7 +18,7 @@ typedef struct Flags {
 } Flags;
 
 // Функция для парсинга опций
-Flags parse_flags(int argc, char *argv[], char *pattern) {
+Flags parse_flags(int argc, char *argv[], char *pattern/*, char *f_file_flag*/) {
   Flags flags = {0};  // жоско инициалзируем все флаги нулями
   int opt;
   int option_index;
@@ -61,6 +61,7 @@ Flags parse_flags(int argc, char *argv[], char *pattern) {
         break;
         case 'f':
         flags.f = 1;
+        //strcat(f_file_flag, optarg);
         break;
       default:
         printf("Usage: %s  \n", argv[0]);
@@ -78,7 +79,7 @@ Flags parse_flags(int argc, char *argv[], char *pattern) {
 }
 
 //жоско зачитаем файлы и красиво выведем sна экран
-void grep_print(Flags flags, char *pattern, char *filename) {
+void grep_print(Flags flags, char *pattern, char *filename/*, char *f_file_flag*/) {
   printf("palku_ne–udalil1 %s\n", pattern);
   int len = strlen(pattern);
   printf("lenusik %d\n", len);
@@ -123,7 +124,8 @@ void grep_print(Flags flags, char *pattern, char *filename) {
     }
 
 int main(int argc, char *argv[]) {
-  // if(argc != 3) {
+  if(argc != 3) 
+    optind++;
   if (argc < 3) {  //учитываем имя программы в качестве первого аргумента.
     printf("Usage: %s  \n", argv[0]);
     exit(1);

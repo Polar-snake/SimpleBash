@@ -21,7 +21,8 @@ Flags parse_flags(int argc, char *argv[], char *pattern, char *f_file_flag);
 void grep_print(Flags flags, char *pattern, char *filename, int file_count);
 void f_flag(char *pattern, char *f_file_flag);
 void output(Flags flags, int line_count, char *buffer, int start, int end,
-            char *filename, int file_count);
+            char *filename, int file_count, int result, regex_t regex,
+            regmatch_t matches);
 
 int main(int argc, char *argv[]) {
   if (argc < 3) {  //учитываем имя программы в качестве первого аргумента.
@@ -119,11 +120,12 @@ void grep_print(Flags flags, char *pattern, char *filename, int file_count) {
     while ((fgets(buffer, 2048, fp)) !=
            NULL) {   // fgets счит постр, дошел до \n count++
       line_count++;  //счетчик строк
-      result = regexec(&regex, buffer, 1, &matches, 0); // rege прогн файл ч/з буфф
+      result =
+          regexec(&regex, buffer, 1, &matches, 0);  // rege прогн файл ч/з буфф
       if (result == 0) match_found++;  //если совп найдены то match_found обновл
       if ((result == 0 && flags.v != 1) || (flags.v == 1 && result == 1))
         output(flags, line_count, buffer, matches.rm_so, matches.rm_eo,
-               filename, file_count);
+               filename, file_count, result, regex, matches);
     }
   }
   if (file_count == 1) {
@@ -168,22 +170,27 @@ void f_flag(char *pattern, char *f_file_flag) {
 }
 
 void output(Flags flags, int line_count, char *buffer, int start, int end,
-            char *filename, int file_count) {
+            char *filename, int file_count, int result, regex_t regex,
+            regmatch_t matches) {
   if (flags.c != 1 && flags.l != 1) {
+    result = regexec(&regex, buffer, 1, &matches, 0);
+    if (flags.v == 1) result = !result;
     if (file_count > 1 && flags.h != 1) printf("%s:", filename);
     if (flags.n == 1) printf("%d:", line_count);
-    if (flags.o == 1 && flags.v != 1) {
-      for (int i = start; i < end; i++) {
-        printf("%c", buffer[i]);
+    if (flags.o == 1 /*&& flags.v != 1*/) {
+      while (end != start && result == 0) {
+        printf("%.*s\n", end - start, &buffer[start]);
+        buffer += end;
+        // if(buffer[end] != '\n') printf("\n");
+        result = regexec(&regex, buffer, 1, &matches, 0);
+        start = matches.rm_so;
+        end = matches.rm_eo;
       }
-      printf("\n");
-    }
-    // printf("%.*s\n", end - start, &buffer[start]);
 
-    else if (flags.c != 1 && flags.l != 1)
+    } else if (flags.c != 1 && flags.l != 1)
       printf("%s", buffer);
     // printf("\n");
   }
   int len = strlen(buffer);
-  if (buffer[len - 1] != '\n') printf("\n");
+  if (buffer[len - 1] != '\n' && flags.l != 1 && flags.c != 1) printf("\n");
 }

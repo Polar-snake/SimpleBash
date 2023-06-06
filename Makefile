@@ -1,8 +1,8 @@
 cc=gcc -Wall -Werror -Wextra -std=c11
-all: check s21_cat
+all: check s21_grep
 
-s21_cat: clean
-	$(cc) s21_cat.c -o s21_cat
+s21_grep: clean
+	$(cc) s21_grep.c -o s21_grep
 
 check:
 	clang-format -n *.c *.h
